@@ -1,0 +1,23 @@
+{
+  "name": "rcp-crm",
+  "version": "2.1.0",
+  "description": "CRM de RCP Digital: clientes, pipeline de proyectos, contratos y escandallo de precios. Funciona como app de escritorio (Electron) o en modo standalone (npm start).",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "node server/server.js",
+    "migrate": "node scripts/migrate-json-to-sqlite.js",
+    "verify-migration": "node scripts/verify-migration.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.18.0",
+    "imapflow": "^2.11.0",
+    "mailparser": "^3.14.3",
+    "nodemailer": "^10.5.0"
+  }
+}

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Acceso - CRM RCP Digital</title>
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+<div class="loginwrap">
+  <div class="logincard">
+    <div class="mark" style="width:52px;height:52px;font-size:15px">RCP</div>
+
+    <div id="passView">
+      <h2 id="loginTitle">Iniciar sesión</h2>
+      <p class="sub mini" id="loginSubtitle" style="text-align:center;margin-bottom:20px">Accede al CRM de RCP Digital</p>
+      <div id="loginError" class="login-error hide"></div>
+      <form id="loginForm" class="form single">
+        <div class="field hide" id="nameField"><label>Tu nombre</label><input id="fName" placeholder="Ej. Rubén" /></div>
+        <div class="field"><label>Email</label><input id="fEmail" type="email" placeholder="tucorreo@ejemplo.com" required /></div>
+        <div class="field"><label>Contraseña</label><input id="fPassword" type="password" placeholder="••••••••" required /></div>
+        <button class="btn primary full" type="submit" id="submitBtn">Entrar</button>
+      </form>
+      <p class="login-toggle" id="setupNote"></p>
+      <p class="login-toggle hide" id="pinLinkWrap"><a id="showPinLink">⚡ Acceder con PIN rápido</a></p>
+    </div>
+
+    <div id="pinView" class="hide">
+      <h2>Acceso rápido</h2>
+      <p class="sub mini" id="pinSubtitle" style="text-align:center;margin-bottom:18px">Elige tu usuario</p>
+      <div id="pinError" class="login-error hide"></div>
+      <div id="pinUserList" class="pin-users"></div>
+      <div id="pinEmpty" class="empty hide" style="margin-bottom:14px">Ningún usuario tiene un PIN configurado todavía. Actívalo desde "Mi perfil" dentro del CRM.</div>
+      <div id="pinEntryBox" class="hide">
+        <p class="pin-entry-name" id="pinEntryName"></p>
+        <input id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" class="pin-input" placeholder="••••" autocomplete="off">
+        <button class="btn primary full" id="pinSubmitBtn" type="button" style="margin-top:14px">Entrar</button>
+        <p class="login-toggle"><a id="pinBackToList">Elegir otro usuario</a></p>
+      </div>
+      <p class="login-toggle"><a id="showPassLink">Usar email y contraseña</a></p>
+    </div>
+
+  </div>
+</div>
+<div id="toasts"></div>
+<script src="/js/api.js"></script>
+<script>
+let isSetup = false;
+let pinUsersLoaded = false;
+let selectedPinUserId = null;
+
+async function init() {
+  try {
+    const status = await api('/auth/status');
+    if (status.user) { window.location.href = '/'; return; }
+    isSetup = status.needsSetup;
+    if (isSetup) {
+      document.getElementById('loginTitle').textContent = 'Crea tu cuenta de administrador';
+      document.getElementById('loginSubtitle').textContent = 'Es la primera vez que se abre el CRM. Crea el acceso principal.';
+      document.getElementById('nameField').classList.remove('hide');
+      document.getElementById('submitBtn').textContent = 'Crear cuenta y entrar';
+      document.getElementById('setupNote').textContent = 'Esta cuenta será administradora y podrá crear accesos para tu equipo.';
+    } else {
+      document.getElementById('pinLinkWrap').classList.remove('hide');
+    }
+  } catch (e) { /* seguimos mostrando el login */ }
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const errBox = document.getElementById('loginError');
+  errBox.classList.add('hide');
+  const email = document.getElementById('fEmail').value.trim();
+  const password = document.getElementById('fPassword').value;
+  const name = document.getElementById('fName').value.trim();
+  try {
+    if (isSetup) {
+      if (!name) throw new Error('Escribe tu nombre.');
+      await api('/auth/setup', { method: 'POST', body: { name, email, password } });
+    } else {
+      await api('/auth/login', { method: 'POST', body: { email, password } });
+    }
+    window.location.href = '/';
+  } catch (e) {
+    errBox.textContent = e.message;
+    errBox.classList.remove('hide');
+  }
+});
+
+/* ---- Acceso rápido con PIN ---- */
+function initials(name) {
+  return String(name || '').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+}
+function showPinError(msg) {
+  const box = document.getElementById('pinError');
+  box.textContent = msg;
+  box.classList.remove('hide');
+}
+function hidePinError() {
+  document.getElementById('pinError').classList.add('hide');
+}
+async function loadPinUsers() {
+  if (pinUsersLoaded) return;
+  try {
+    const r = await api('/auth/pin-users');
+    const list = document.getElementById('pinUserList');
+    if (!r.items.length) {
+      document.getElementById('pinEmpty').classList.remove('hide');
+    } else {
+      list.innerHTML = r.items.map(u => `<div class="pin-user" data-id="${u.id}" data-name="${u.name.replace(/"/g,'&quot;')}">
+        <div class="pin-avatar">${initials(u.name)}</div><span>${u.name}</span>
+      </div>`).join('');
+      list.querySelectorAll('.pin-user').forEach(el => {
+        el.addEventListener('click', () => selectPinUser(el.dataset.id, el.dataset.name));
+      });
+    }
+    pinUsersLoaded = true;
+  } catch (e) { /* si falla, se queda la lista vacía */ }
+}
+function selectPinUser(id, name) {
+  selectedPinUserId = id;
+  hidePinError();
+  document.getElementById('pinUserList').classList.add('hide');
+  document.getElementById('pinEmpty').classList.add('hide');
+  document.getElementById('pinEntryName').textContent = name;
+  document.getElementById('pinEntryBox').classList.remove('hide');
+  const input = document.getElementById('pinInput');
+  input.value = '';
+  input.focus();
+}
+function backToPinList() {
+  selectedPinUserId = null;
+  hidePinError();
+  document.getElementById('pinEntryBox').classList.add('hide');
+  document.getElementById('pinUserList').classList.remove('hide');
+  if (!document.getElementById('pinUserList').children.length) document.getElementById('pinEmpty').classList.remove('hide');
+}
+async function submitPin() {
+  const pin = document.getElementById('pinInput').value;
+  if (!/^\d{4}$/.test(pin)) { showPinError('Escribe los 4 dígitos del PIN.'); return; }
+  hidePinError();
+  try {
+    await api('/auth/pin-login', { method: 'POST', body: { userId: selectedPinUserId, pin } });
+    window.location.href = '/';
+  } catch (e) {
+    showPinError(e.message);
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+}
+document.getElementById('pinInput').addEventListener('input', (ev) => {
+  ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 4);
+  if (ev.target.value.length === 4) submitPin();
+});
+document.getElementById('pinSubmitBtn').addEventListener('click', submitPin);
+document.getElementById('pinBackToList').addEventListener('click', (ev) => { ev.preventDefault(); backToPinList(); });
+document.getElementById('showPinLink').addEventListener('click', (ev) => {
+  ev.preventDefault();
+  document.getElementById('passView').classList.add('hide');
+  document.getElementById('pinView').classList.remove('hide');
+  loadPinUsers();
+});
+document.getElementById('showPassLink').addEventListener('click', (ev) => {
+  ev.preventDefault();
+  document.getElementById('pinView').classList.add('hide');
+  document.getElementById('passView').classList.remove('hide');
+});
+
+init();
+</script>
+</body>
+</html>

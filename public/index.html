@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CRM RCP Digital</title>
+<link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+<div class="mobilebar" id="mobileNav"></div>
+<div class="app">
+  <aside class="side">
+    <div class="logo">
+      <div class="mark">RCP</div>
+      <div><h1>CRM RCP Digital</h1><p>Clientes, pipeline y escandallo</p></div>
+    </div>
+    <div id="navContainer"></div>
+    <div class="side-foot">
+      <div class="userbox">
+        <div class="avatar" id="userAvatar">--</div>
+        <div class="who"><strong id="userName">—</strong><span id="userRole">—</span></div>
+        <button class="logoutbtn" id="logoutBtn" title="Cerrar sesión">⏻</button>
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <div><h2 id="pageTitle"></h2><p id="pageDesc"></p></div>
+    </div>
+    <section id="dashboard" class="section"></section>
+    <section id="pipeline" class="section"></section>
+    <section id="clients" class="section"></section>
+    <section id="contracted" class="section"></section>
+    <section id="calculator" class="section"></section>
+    <section id="services" class="section"></section>
+    <section id="budgets" class="section"></section>
+    <section id="invoices" class="section"></section>
+    <section id="pricing" class="section"></section>
+    <section id="hours" class="section"></section>
+    <section id="profitability" class="section"></section>
+    <section id="profile" class="section"></section>
+    <section id="users" class="section"></section>
+    <section id="settings" class="section"></section>
+    <section id="guide" class="section"></section>
+  </main>
+</div>
+<div class="modal-overlay hide" id="modal">
+  <div class="modal-card" id="modalCard">
+    <div class="modal-head"><h3 id="modalTitle"></h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+<div id="toasts"></div>
+<script src="/js/vendor/chart.umd.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/calc.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
