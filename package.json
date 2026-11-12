@@ -5,6 +5,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "node server/server.js",
+    "build": "echo \"sin paso de build: public-react/ ya viene compilado\"",
     "migrate": "node scripts/migrate-json-to-sqlite.js",
     "verify-migration": "node scripts/verify-migration.js"
   },
